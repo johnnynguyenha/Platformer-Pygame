@@ -1,5 +1,8 @@
 from settings import * 
 from pytmx.util_pygame import load_pygame
+from sprites import *
+from player import *
+from groups import *
 from random import choice, randint
 
 class Game:
@@ -11,14 +14,32 @@ class Game:
         self.running = True
 
         # groups 
-        self.all_sprites = pygame.sprite.Group()
+        self.all_sprites = AllSprites()
         self.collision_sprites = pygame.sprite.Group()
 
-        if choice(['redefine', 'wushiland']) == 'redefine':
-            print (str(randint(0,11)))
-        else:
-            print ('four seasons')
+        # load game
+        self.setup()
 
+
+    def setup(self):
+        map = load_pygame(join('data', 'maps', 'world.tmx'))
+        for x, y, image in map.get_layer_by_name('Main').tiles(): #import ground in tiles
+            Sprite((x * TILE_SIZE,y * TILE_SIZE), image, (self.all_sprites, self.collision_sprites))
+
+        for x, y, image in map.get_layer_by_name('Decoration').tiles(): #import decorations in tiles
+            Sprite((x * TILE_SIZE,y * TILE_SIZE), image, (self.all_sprites))
+
+        for obj in map.get_layer_by_name('Entities'): #import ground in tiles
+            if obj.name == 'Player':
+                self.player = Player((obj.x, obj.y), self.all_sprites, self.collision_sprites)
+
+
+
+        #for obj in map.get_layer_by_name('Main'): # import objects in tiles
+            #CollisionSprite((obj.x, obj.y), obj.image, (self.all_sprites, self.collision_sprites))
+
+       #  for collide in map.get_layer_by_name('Collisions'): # import collisions
+            #CollisionSprite((collide.x, collide.y), pygame.Surface((collide.width, collide.height)), (self.collision_sprites))
  
     def run(self):
         while self.running:
@@ -33,7 +54,7 @@ class Game:
 
             # draw 
             self.display_surface.fill(BG_COLOR)
-            self.all_sprites.draw(self.display_surface)
+            self.all_sprites.draw(self.player.rect.center)
             pygame.display.update()
         
         pygame.quit()
